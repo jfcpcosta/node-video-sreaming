@@ -41,9 +41,9 @@ app.get('/stream/:id',  (req, res) => {
   
     const videoSize = statSync(video.path).size;
   
-    const CHUNK_SIZE = 10 ** 6;
+    const chunkSize = 10 ** 6;
     const start = Number(range.replace(/\D/g, ''));
-    const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+    const end = Math.min(start + chunkSize, videoSize - 1);
   
     const contentLength = end - start + 1;
     const headers = {
