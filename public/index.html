@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>HTTP Video Stream</title>
+        <style>
+            :root {
+                --color-background: #121214;
+                --color-green: #04d361;
+                --color-red: #e83f5b;
+                --color-orange: #fd951f;
+                --color-yellow: #f7df1e;
+                --color-primary: #8257e6;
+                --color-primary-hover: #9466ff;
+                --color-secondary: #e1e1e6;
+                --color-text: #a8a8b3;
+                --color-support: #737380;
+                --color-shape: #202024;
+                --color-shape-hover: #29292e;
+                --color-icons: #41414d;
+                --color-borders: #323238;
+                --color-black: #0d0d0f;
+                --color-white: #fff;
+            }
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                background: var(--color-black);
+            }
+            .container {
+                height: 100%;
+                display: flex;
+            }
+
+            .sidebar {
+                width: 20%;
+                min-width: 300px;
+                background: var(--color-background);
+                border-right: 1px solid var(--color-borders);
+                overflow-y: scroll;
+            }
+
+            .sidebar h2 {
+                color: var(--color-secondary);
+                background: var(--color-background);
+                width: 100%;
+                border-bottom: 1px solid var(--color-borders);
+                padding: 20px;
+                position: fixed;
+            }
+            
+            .sidebar ul {
+                margin-top: 60px;
+                list-style: none;
+                padding: 20px 0;
+            }
+            
+            .sidebar ul li {
+                padding: 20px;
+            }
+
+            .sidebar ul li a {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: var(--color-secondary);
+                text-decoration: none;
+            }
+            
+            .sidebar ul li:hover {
+                background: var(--color-primary-hover);
+            }
+            
+            .sidebar ul li small {
+                color: var(--color-text);
+            }
+
+            .video-container video {
+                width: 100%;
+                height: 100%;
+                outline: none;
+            }
+
+            .video-container h2 {
+                color: var(--color-secondary);
+                border-bottom: 1px solid var(--color-borders);
+                margin-bottom: 20px;
+                padding: 20px;
+                position: absolute;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <nav class="sidebar">
+                <h2>My Videos</h2>
+                <ul></ul>
+            </nav>
+            
+            <div class="video-container">
+                <h2></h2>
+                <video id="videoPlayer" controls autoplay></video>
+            </div>
+        </div>
+
+        <script>
+            const play = (video) => {
+                document.querySelector('.video-container h2').textContent = video.name;
+                document.querySelector('#videoPlayer').setAttribute('src', video.path);
+            };
+
+            const timeSince = (date) => {
+                const now = new Date();
+                const diff = (now.getTime() - date.getTime()) / 1000;
+
+                if (diff < 60) {
+                    return diff + 's';
+                } else if (diff < 3600) {
+                    return Math.floor(diff / 60) + 'm';
+                } else if (diff < 3600 * 24) {
+                    return Math.floor(diff / 3600) + 'h';
+                } else if (diff < 3600 * 24 * 7) {
+                    return Math.floor(diff / (3600 * 24)) + 'd';
+                } else if (diff < 3600 * 24 * 30) {
+                    return Math.floor(diff / (3600 * 24 * 7)) + 'w';
+                } else if (diff < 3600 * 24 * 30 * 12) {
+                    return Math.floor(diff / (3600 * 24 * 30)) + 'mo';
+                } else {
+                    return Math.floor(diff / (3600 * 24 * 30 * 12)) + 'y';
+                }
+            };
+
+            (async () => {
+                const res = await fetch('/videos');
+                const json = await res.json();
+
+                if (json.length > 0) {
+                    play(json[0]);
+                }
+                
+                document.querySelector('ul').innerHTML = json.map((video, index) => `
+                    <li>
+                        <a href="${video.path}" data-index="${index}">
+                            ${video.name}
+                            <small>${timeSince(new Date(video.createdAt))}</small>
+                        </a>
+                    </li>
+                `).join('');
+                
+                document.querySelectorAll('a').forEach(link => link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    play(json[event.target.dataset.index]);
+                }));
+            })();
+        </script>
+    </body>
+</html>
